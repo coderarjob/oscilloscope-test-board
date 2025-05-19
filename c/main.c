@@ -87,13 +87,23 @@ __attribute__ ((noreturn)) void main (void)
     }
 }
 
-void holdoff_test()
+static void holdoff_test()
 {
 #define OUTPUT_PIN_NO PD1
 #define OUTPUT_PORT   PORTD
-#define OUTPUT_PIN    PIND
 #define OUTPUT_DDR    DDRD
 
+    MAKE_PIN_OUTPUT (OUTPUT_DDR, OUTPUT_PIN_NO);
+
+    for (; !mode_isDirty;) {
+        for (int i = 0; i < 20; i++) {
+            BIT_SET (OUTPUT_PORT, OUTPUT_PIN_NO);
+            _delay_loop_1 (255);
+            BIT_CLEAR (OUTPUT_PORT, OUTPUT_PIN_NO);
+            _delay_loop_1 (255);
+        }
+        _delay_loop_2 (65535);
+    }
 }
 
 void usart_test()
