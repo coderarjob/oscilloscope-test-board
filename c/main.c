@@ -21,8 +21,8 @@ typedef enum TestModes {
     TEST_COUNT
 } TestModes;
 
-static TestModes mode;
-static bool mode_isDirty;
+static volatile TestModes mode;
+static volatile bool mode_isDirty;
 
 static void usart_test();
 static void holdoff_test();
