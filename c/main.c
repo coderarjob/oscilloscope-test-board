@@ -29,17 +29,19 @@ static void holdoff_test();
 
 ISR (INT0_vect)
 {
-    if (++mode == TEST_COUNT) {
-        mode = 1;
+    if (++mode >= TEST_COUNT) {
+        mode = USART_TEST;
     }
 
     mode_isDirty = true;
+
+    BIT_SET (STATUS_PORT, STATUS_PIN_NO);
 
     // Wait for the pin to be high
     while (!IS_BIT_SET (SWITCH_PIN, SWITCH_PIN_NO))
         ;
 
-    BIT_CLEAR(STATUS_PORT, STATUS_PIN_NO);
+    BIT_CLEAR (STATUS_PORT, STATUS_PIN_NO);
 }
 
 void setup_io()
@@ -48,12 +50,17 @@ void setup_io()
     MAKE_PIN_INPUT_PULLUP (SWITCH_DDR, SWITCH_PORT, SWITCH_PIN_NO);
 
     // Enable interrupt
+#if SWITCH_PIN_NO != PD2
+    #error "Wrong switch pin set"
+#endif
+
     BIT_CLEAR_MASK (MCUCR, (1 << ISC01 | 1 << ISC00)); // Trigger at Low level
     BIT_SET_MASK (GICR, (1 << INT0));                  // Enable the interrupt
 
     // Status port
     MAKE_PIN_OUTPUT (STATUS_DDR, STATUS_PIN_NO);
-    BIT_SET (STATUS_PORT, STATUS_PIN_NO);
+    BIT_CLEAR (STATUS_PORT, STATUS_PIN_NO);
+
     sei();
 }
 
