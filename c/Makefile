@@ -1,5 +1,6 @@
 machine ?= atmega8a
 clock ?= 12000000
+DEBUG := 1
 
 ld_flags := -mmcu=${machine}
 cc_flags := -mmcu=${machine}      \
@@ -12,6 +13,10 @@ cc_flags := -mmcu=${machine}      \
 		    -Wall                 \
 		    -Wextra               \
 		    -std=c99
+
+ifdef DEBUG
+	cc_flags += -g
+endif
 
 ALL: main.hex main.lst
 
