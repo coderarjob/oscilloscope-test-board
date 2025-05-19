@@ -15,16 +15,19 @@ cc_flags := -mmcu=${machine}      \
 
 ALL: main.hex main.lst
 
-main.o: main.c
-	avr-gcc -c ${cc_flags} -DF_CPU=${clock} main.c
+TARGET := main.hex
+SRC := main.c usart.c
 
-main.elf main.lst &: main.o
-	avr-gcc ${ld_flags} -o main.elf main.o
-	avr-objdump -DSl main.elf > main.lst
+OBJS := $(SRC:.c=.o)
 
-main.hex: main.elf
+%.o: %.c
+	avr-gcc -c ${cc_flags} -DF_CPU=${clock} $<
+
+$(TARGET): $(OBJS)
+	avr-gcc $(ld_flags) -o main.elf $(OBJS)
 	avr-objcopy -O ihex main.elf main.hex
+	avr-objdump -dSl main.elf > main.lst
 
 .PHONY:
 clean:
-	rm -f main.elf main.hex main.o main.lst
+	rm -f $(TARGET) $(TARGET:.hex=.elf) $(TARGET:.hex=.lst) $(OBJS)
