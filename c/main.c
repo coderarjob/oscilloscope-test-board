@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "main.h"
 
-#define SWITCH_PIN_NO PD0
+#define SWITCH_PIN_NO PD2
 #define SWITCH_PORT   PORTD
 #define SWITCH_PIN    PIND
 #define SWITCH_DDR    DDRD
@@ -33,7 +33,7 @@ ISR (INT0_vect)
         mode = 1;
     }
 
-    BIT_SET(STATUS_PORT, STATUS_PIN_NO);
+    mode_isDirty = true;
 
     // Wait for the pin to be high
     while (!IS_BIT_SET (SWITCH_PIN, SWITCH_PIN_NO))
@@ -54,6 +54,7 @@ void setup_io()
     // Status port
     MAKE_PIN_OUTPUT (STATUS_DDR, STATUS_PIN_NO);
     BIT_SET (STATUS_PORT, STATUS_PIN_NO);
+    sei();
 }
 
 __attribute__ ((noreturn)) void main (void)
