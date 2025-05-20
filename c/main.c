@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <stdint.h>
 #include <util/delay_basic.h>
 #include <avr/interrupt.h>
 #include <stdbool.h>
@@ -14,10 +15,13 @@
 #define STATUS_PIN    PINB
 #define STATUS_DDR    DDRB
 
+#define RUNT_OUTPUT_PORT   PORTC
+#define RUNT_OUTPUT_DDR    DDRC
 typedef enum TestModes {
     UNKNOWN_TEST,
     USART_TEST,
     HOLDOFF_TEST,
+    RUNT_PULSE,
     TEST_COUNT
 } TestModes;
 
@@ -26,6 +30,7 @@ static volatile bool mode_isDirty;
 
 static void usart_test();
 static void holdoff_test();
+static void runt_pulse_test();
 
 ISR (INT0_vect)
 {
@@ -80,6 +85,9 @@ __attribute__ ((noreturn)) void main (void)
         case HOLDOFF_TEST:
             holdoff_test();
             break;
+        case RUNT_PULSE:
+            runt_pulse_test();
+            break;
         default:
             BIT_SET (STATUS_PORT, STATUS_PIN_NO);
             break;
@@ -87,13 +95,31 @@ __attribute__ ((noreturn)) void main (void)
     }
 }
 
+static void runt_pulse_test()
+{
+    RUNT_OUTPUT_DDR = 0xFF; // Make every pin as output
+    uint32_t runt_freq = 1000; // 1 rust pulse every 100 normal pulses
+
+    for (; !mode_isDirty;) {
+        if (--runt_freq == 0) {
+            runt_freq = 1000;
+            RUNT_OUTPUT_PORT = (0x7 << 1); // Make PC1:PC4 as high
+            _delay_loop_2 (255);
+            RUNT_OUTPUT_PORT = (0);
+            _delay_loop_2 (255);
+        } else {
+            RUNT_OUTPUT_PORT = (0xF<<1); // Make PC1:PC4 as high
+            _delay_loop_2 (512);
+        }
+        RUNT_OUTPUT_PORT = 0x0; // Make all pins low
+        _delay_loop_2 (512);
+    }
+
+    RUNT_OUTPUT_PORT = 0x0; // Make all pins low
+}
+
 static void holdoff_test()
 {
-#define OUTPUT_PIN_NO PD1
-#define OUTPUT_PORT   PORTD
-#define OUTPUT_DDR    DDRD
-
-    MAKE_PIN_OUTPUT (OUTPUT_DDR, OUTPUT_PIN_NO);
 
     for (; !mode_isDirty;) {
         for (int i = 0; i < 20; i++) {
