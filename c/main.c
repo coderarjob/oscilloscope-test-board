@@ -17,6 +17,11 @@
 
 #define RUNT_OUTPUT_PORT   PORTC
 #define RUNT_OUTPUT_DDR    DDRC
+
+#define HOLDOFF_OUTPUT_PIN_NO PD1
+#define HOLDOFF_OUTPUT_PORT   PORTD
+#define HOLDOFF_OUTPUT_DDR    DDRD
+
 typedef enum TestModes {
     UNKNOWN_TEST,
     USART_TEST,
@@ -120,12 +125,13 @@ static void runt_pulse_test()
 
 static void holdoff_test()
 {
+    MAKE_PIN_OUTPUT (HOLDOFF_OUTPUT_DDR, HOLDOFF_OUTPUT_PIN_NO);
 
     for (; !mode_isDirty;) {
         for (int i = 0; i < 20; i++) {
-            BIT_SET (OUTPUT_PORT, OUTPUT_PIN_NO);
+            BIT_SET (HOLDOFF_OUTPUT_PORT, HOLDOFF_OUTPUT_PIN_NO);
             _delay_loop_1 (255);
-            BIT_CLEAR (OUTPUT_PORT, OUTPUT_PIN_NO);
+            BIT_CLEAR (HOLDOFF_OUTPUT_PORT, HOLDOFF_OUTPUT_PIN_NO);
             _delay_loop_1 (255);
         }
         _delay_loop_2 (65535);
