@@ -30,5 +30,13 @@ $(OBJ_DIR):
 clean:
 	rm -fr $(TARGET) $(BUILD_DIR)
 
+program: $(TARGET)
+	avrdude -c usbasp -p m8a -U flash:w:$(TARGET):i
+
+restart:
+	avrdude -c usbasp -p m8a -U signature:r:-:h
+
+.PHONY: program
+.PHONY: restart
 .PHONY: clean
 .PHONY: all
