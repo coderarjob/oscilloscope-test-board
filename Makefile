@@ -1,38 +1,34 @@
-machine ?= atmega8a
-clock ?= 12000000
-DEBUG := 1
+include ./build/config.mk
+include ./build/flags.mk
 
-ld_flags := -mmcu=${machine}
-cc_flags := -mmcu=${machine}      \
-		    -mint8                \
-		    -fpack-struct         \
-		    -funsigned-char       \
-		    -funsigned-bitfields  \
-		    -fshort-enums         \
-		    -Os                   \
-		    -Wall                 \
-		    -Wextra               \
-		    -std=c99
+BUILD_DIR ?= out
+OBJ_DIR := $(BUILD_DIR)/obj
+SRC_DIR := src
 
-ifdef DEBUG
-	cc_flags += -g
-endif
+TARGET := $(BUILD_DIR)/main.hex
 
-ALL: main.hex main.lst
+all: $(TARGET)
 
-TARGET := main.hex
-SRC := main.c usart.c
+SRC = $(wildcard $(SRC_DIR)/*.c)
+OBJS := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-OBJS := $(SRC:.c=.o)
+ELF_FILE := $(TARGET:%.hex=%.elf)
 
-%.o: %.c
-	avr-gcc -c ${cc_flags} -DF_CPU=${clock} $<
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	avr-gcc -c ${cc_flags} -DF_CPU=${clock} $< -o $@
 
-$(TARGET): $(OBJS)
-	avr-gcc $(ld_flags) -o main.elf $(OBJS)
-	avr-objcopy -O ihex main.elf main.hex
-	avr-objdump -dSl main.elf > main.lst
+$(ELF_FILE): $(OBJS)
+	avr-gcc $(ld_flags) -o $@ $^
 
-.PHONY:
+$(TARGET): $(ELF_FILE)
+	avr-objcopy -O ihex $^ $@
+	avr-objdump -dSl $^ > $(TARGET:%.hex=%.lst)
+
+$(OBJ_DIR):
+	mkdir -p $@
+
 clean:
-	rm -f $(TARGET) $(TARGET:.hex=.elf) $(TARGET:.hex=.lst) $(OBJS)
+	rm -fr $(TARGET) $(BUILD_DIR)
+
+.PHONY: clean
+.PHONY: all
